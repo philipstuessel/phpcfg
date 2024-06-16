@@ -15,12 +15,12 @@ fi
 
 phpcfg() {
     if [[ "$1" == "-v" || "$1" == "-version" || "$1" == "v" ]]; then
-        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.1.1 $NC"
+        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.1.2 $NC"
     fi
     if [[ "$1" == "-php" ]]; then
         v="$2"
         root=$(jq -r '.phpRoot' $phpcfg_CONFIG_FILE)
-        phpcmd="${root}$v/bin/php"
+        phpcmd=${root//"!v"/$v}
         if [[ -e $phpcmd ]]; then
             eval "$phpcmd \"$3\""
         else

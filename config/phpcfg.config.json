@@ -1,4 +1,4 @@
 {
-    "phpRoot": "/opt/homebrew/opt/",
+    "phpRoot": "/opt/homebrew/opt/php@!v/bin/php",
     "global": ""
 }
