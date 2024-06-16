@@ -9,26 +9,26 @@ phpcfg_MAIN_FOLDER="${JAP_FOLDER}plugins/packages/phpcfg/config/"
 phpcfg_CONFIG_FILE="${phpcfg_MAIN_FOLDER}phpcfg.config.json"
 
 gphp=$(jq -r '.global' $phpcfg_CONFIG_FILE)
-if [[ ! -z $gphp ]] {
+if [[ ! -z $gphp ]]; then
     alias php="phpcfg -php $gphp"
-}
+fi
 
 phpcfg() {
-    if [[ "$1" == "-v" || "$1" == "-version" || "$1" == "v" ]] {
-        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.1.0 $NC"
-    }
-    if [[ "$1" == "-php" ]] {
+    if [[ "$1" == "-v" || "$1" == "-version" || "$1" == "v" ]]; then
+        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.1.1 $NC"
+    fi
+    if [[ "$1" == "-php" ]]; then
         v="$2"
         root=$(jq -r '.phpRoot' $phpcfg_CONFIG_FILE)
-        phpcmd="${root}php@$v/bin/php"
-        if [[ -e $phpcmd ]] {
+        phpcmd="${root}$v/bin/php"
+        if [[ -e $phpcmd ]]; then
             eval "$phpcmd \"$3\""
-        } else {
+        else
             echo "${RED}The PHP version is not installed$NC"
-        }
-    }
+        fi
+    fi
     
-    if [[ "$1" == "e" ]] {
-        $(e $phpcfg_CONFIG_FILE)
-    }
+    if [[ "$1" == "e" ]]; then
+       $(e $phpcfg_CONFIG_FILE)
+    fi
 }
