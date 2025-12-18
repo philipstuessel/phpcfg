@@ -1,4 +1,5 @@
 {
     "phpRoot": "/opt/homebrew/opt/php@!v/bin/php",
-    "global": ""
+    "global": "",
+    "composerRoot": ""
 }
