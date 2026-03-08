@@ -19,7 +19,7 @@ fi
 
 phpcfg() {
     if [[ "$1" == "-v" || "$1" == "-version" || "$1" == "v" ]]; then
-        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.3.0 $NC"
+        echo -e "${BLUE}phpcfg$NC$BLUE$BOLD v0.3.1 $NC"
         echo -e "${YELLOW}JAP plugin${NC}"
         return
     fi
@@ -59,9 +59,19 @@ phpcfg() {
                 args=("${@:4}") 
                 code="${(j: :)args}"
                 $phpcmd -r "$code"
+                if [[ $? -ne 0 ]]; then
+                    return 1
+                else
+                    return 0
+                fi
             else
                 shift 2
                 $phpcmd "$@"
+                if [[ $? -ne 0 ]]; then
+                    return 1
+                else
+                    return 0
+                fi
             fi
         fi
         return 1
