@@ -6,9 +6,10 @@ alias php82="phpcfg -php 8.2"
 alias php83="phpcfg -php 8.3"
 alias php84="phpcfg -php 8.4"
 alias php85="phpcfg -php 8.5"
+alias php86="phpcfg -php 8.6"
 
-phpcfg_v="v0.4.0"
-PHPVERSIONS=(7.4 8.0 8.1 8.2 8.3 8.4 8.5)
+phpcfg_v="v0.4.1"
+PHPVERSIONS=(7.4 8.0 8.1 8.2 8.3 8.4 8.5 8.6)
 
 phpcfg_JAP_ROOT="${JAP_FOLDER%/}"
 if [[ -n "$phpcfg_JAP_ROOT" ]]; then
@@ -34,17 +35,17 @@ phpcfg_install_composer() {
     local installer_file
     local php_bin
     local direct_url="https://getcomposer.org/download/latest-stable/composer.phar"
-
+    
     if [[ -z "$phpcfg_PACKAGE_DIR" || "$phpcfg_PACKAGE_DIR" == "/" ]]; then
         echo -e "${RED}Invalid package path:${NC} $phpcfg_PACKAGE_DIR"
         return 1
     fi
-
+    
     mkdir -p "$phpcfg_PACKAGE_DIR" || {
         echo -e "${RED}Could not create package directory:${NC} $phpcfg_PACKAGE_DIR"
         return 1
     }
-
+    
     # Fast path: download composer.phar directly.
     echo -e "${YELLOW}Composer is downloading...${NC}"
     if command -v curl >/dev/null 2>&1; then
@@ -54,7 +55,7 @@ phpcfg_install_composer() {
             echo -e "${GREEN}Composer installed:${NC} $composer_phar"
             return 0
         fi
-    elif command -v wget >/dev/null 2>&1; then
+        elif command -v wget >/dev/null 2>&1; then
         if wget --show-progress -q -O "$composer_phar" "$direct_url"; then
             chmod +x "$composer_phar"
             phpcfg_set_composer_root "$composer_phar"
@@ -62,13 +63,13 @@ phpcfg_install_composer() {
             return 0
         fi
     fi
-
+    
     php_bin=$(command -v php)
     if [[ -z "$php_bin" ]]; then
         echo -e "${RED}PHP not found in PATH.${NC}"
         return 1
     fi
-
+    
     installer_file="$(mktemp)"
     if command -v curl >/dev/null 2>&1; then
         curl --progress-bar -fL "https://getcomposer.org/installer" -o "$installer_file" || {
@@ -76,7 +77,7 @@ phpcfg_install_composer() {
             echo -e "${RED}Failed to download Composer installer.${NC}"
             return 1
         }
-    elif command -v wget >/dev/null 2>&1; then
+        elif command -v wget >/dev/null 2>&1; then
         wget --show-progress -q -O "$installer_file" "https://getcomposer.org/installer" || {
             rm -f "$installer_file"
             echo -e "${RED}Failed to download Composer installer.${NC}"
@@ -87,16 +88,16 @@ phpcfg_install_composer() {
         echo -e "${RED}Neither curl nor wget found.${NC}"
         return 1
     fi
-
+    
     "$php_bin" "$installer_file" --install-dir="$phpcfg_PACKAGE_DIR" --filename="composer.phar"
     local install_rc=$?
     rm -f "$installer_file"
-
+    
     if [[ $install_rc -ne 0 || ! -f "$composer_phar" ]]; then
         echo -e "${RED}Composer installation failed.${NC}"
         return 1
     fi
-
+    
     chmod +x "$composer_phar"
     phpcfg_set_composer_root "$composer_phar"
     echo -e "${GREEN}Composer installed:${NC} $composer_phar"
@@ -108,35 +109,35 @@ phpcfg_composer_link() {
     local uname_s uname_m
     local link_dir=""
     local candidates=()
-
+    
     if [[ ! -f "$composer_phar" ]]; then
         echo -e "${RED}composer.phar not found at:${NC} $composer_phar"
         echo -e "Run ${CYAN}phpcfg install composer${NC} first."
         return 1
     fi
-
+    
     uname_s="$(uname -s)"
     uname_m="$(uname -m)"
-
+    
     if [[ "$uname_s" == "Darwin" ]]; then
         if [[ "$uname_m" == "arm64" ]]; then
             candidates=(/opt/homebrew/bin /usr/local/bin "$HOME/.local/bin")
         else
             candidates=(/usr/local/bin /opt/homebrew/bin "$HOME/.local/bin")
         fi
-    elif [[ "$uname_s" == "Linux" ]]; then
+        elif [[ "$uname_s" == "Linux" ]]; then
         candidates=(/usr/local/bin "$HOME/.local/bin")
     else
         candidates=("$HOME/.local/bin")
     fi
-
+    
     for dir in "${candidates[@]}"; do
         if [[ -d "$dir" && -w "$dir" ]]; then
             link_dir="$dir"
             break
         fi
     done
-
+    
     if [[ -z "$link_dir" ]]; then
         link_dir="$HOME/.local/bin"
         mkdir -p "$link_dir" || {
@@ -144,12 +145,12 @@ phpcfg_composer_link() {
             return 1
         }
     fi
-
+    
     ln -sf "$composer_phar" "$link_dir/composer" || {
         echo -e "${RED}Failed to create symlink:${NC} $link_dir/composer"
         return 1
     }
-
+    
     phpcfg_set_composer_root "$composer_phar"
     echo -e "${GREEN}Composer linked:${NC} $link_dir/composer -> $composer_phar"
     if [[ ":$PATH:" != *":$link_dir:"* ]]; then
@@ -164,19 +165,19 @@ phpcfg_update_composer() {
     local do_link=0
     local update_args=()
     local arg
-
+    
     if [[ ! -f "$composer_phar" ]]; then
         echo -e "${RED}composer.phar not found at:${NC} $composer_phar"
         echo -e "Run ${CYAN}phpcfg install composer${NC} first."
         return 1
     fi
-
-    php_bin="php"
+    
+    php_bin=$(command -v php)
     if [[ -z "$php_bin" ]]; then
         echo -e "${RED}PHP not found in PATH.${NC}"
         return 1
     fi
-
+    
     for arg in "$@"; do
         if [[ "$arg" == "-link" || "$arg" == "--link" ]]; then
             do_link=1
@@ -184,14 +185,14 @@ phpcfg_update_composer() {
             update_args+=("$arg")
         fi
     done
-
+    
     "$php_bin" "$composer_phar" self-update "${update_args[@]}"
     local update_rc=$?
     if [[ $update_rc -ne 0 ]]; then
         echo -e "${RED}Composer update failed.${NC}"
         return $update_rc
     fi
-
+    
     echo -e "${GREEN}Composer updated:${NC} $composer_phar"
     if [[ $do_link -eq 1 ]]; then
         phpcfg_composer_link
@@ -211,17 +212,17 @@ phpcfg() {
         echo -e "${YELLOW}JAP plugin${NC}"
         return
     fi
-
+    
     if [[ "$1" == "install" && "$2" == "composer" ]]; then
         phpcfg_install_composer
         return $?
     fi
-
+    
     if [[ "$1" == "composer" && "$2" == "link" ]]; then
         phpcfg_composer_link
         return $?
     fi
-
+    
     if [[ "$1" == "composer" && "$2" == "update" ]]; then
         shift 2
         phpcfg_update_composer "$@"
@@ -244,23 +245,24 @@ phpcfg() {
             if ! jq -e '.composerRoot' "$phpcfg_CONFIG_FILE" >/dev/null; then
                 jq '. + {composerRoot: ""}' "$phpcfg_CONFIG_FILE" > tmp.$$.json && mv tmp.$$.json "$phpcfg_CONFIG_FILE"
             fi
-
+            
             local composer_root=$(jq -r '.composerRoot' "$phpcfg_CONFIG_FILE")
             if [[ -z "$composer_root" ]]; then
                 composer_cmd=$(command -v composer)
             else
                 composer_cmd="$composer_root"
             fi
-
+            
             if [[ -z "$composer_cmd" ]]; then
                 echo -e "${RED}Composer not found in PATH$NC"
                 return 1
             fi
             shift 3
             "$phpcmd" "$composer_cmd" "$@"
+            return $?
         else
             if [[ "$3" == "-r" ]]; then
-                args=("${@:4}") 
+                args=("${@:4}")
                 code="${(j: :)args}"
                 $phpcmd -r "$code"
                 if [[ $? -ne 0 ]]; then
@@ -278,7 +280,6 @@ phpcfg() {
                 fi
             fi
         fi
-        return 1
     fi
     
     if [[ "$1" == "e" ]]; then
@@ -307,7 +308,7 @@ phpcfg() {
         echo -e "${RED}Unknown command: $1${NC}"
         echo -e "Use '${CYAN}phpcfg --help${NC}' to see available commands."
         return 1
-    fi   
+    fi
 }
 
 phplist() {
